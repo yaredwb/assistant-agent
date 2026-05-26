@@ -12,14 +12,22 @@ from google import genai
 from google.genai import types
 
 from . import config
-from .contract import Dossier
 from .tools import FUNCTION_DECLARATIONS, ToolBox
 
 
-def _system_instruction(dossier: Dossier) -> str:
+def _system_instruction(toolbox: ToolBox) -> str:
+    dossier = toolbox.dossier
     order = dossier.suggested_walkthrough_order or [
         "what changed", "why", "key decisions", "tests", "risks", "open questions"
     ]
+    deck_instruction = ""
+    if toolbox.deck_outline:
+        deck_instruction = f"""
+
+A PowerPoint companion deck has been prepared at: {toolbox.deck_path}
+Use the deck as the walkthrough agenda. Refer to slide numbers when useful, and call
+read_deck_outline if you need the exact slide list or narration cues."""
+
     return f"""You are the engineer's trusted colleague. You just finished a task in the \
 repo '{dossier.repo}' (branch {dossier.branch or 'main'}) and you're walking them through \
 it out loud, the way you would in their office.
@@ -32,7 +40,7 @@ You have tools to fetch real detail — call show_diff, read_file, list_changed_
 show_test_results rather than guessing. When the engineer gives an opinion, asks for a \
 change, or flags something, call record_feedback with a crisp summary of it. If they ask \
 you to hand the work back, call create_followup_prompt_for_coding_agent. Do not write code \
-yourself — your job is to explain, answer, and capture feedback.
+yourself — your job is to explain, answer, and capture feedback.{deck_instruction}
 
 Here is the dossier of what you did:
 {dossier.model_dump_json(indent=2)}"""
@@ -78,7 +86,7 @@ async def run_walkthrough(toolbox: ToolBox) -> None:
     client = genai.Client()
     live_config = {
         "response_modalities": ["AUDIO"],
-        "system_instruction": _system_instruction(toolbox.dossier),
+        "system_instruction": _system_instruction(toolbox),
         "tools": [{"function_declarations": FUNCTION_DECLARATIONS}],
     }
 

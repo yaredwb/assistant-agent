@@ -16,7 +16,7 @@ coding agent finishes work
 review dossier  ── native (reviews/latest.json)  OR  fallback (generated from git + Claude Code transcripts)
         │
         ▼
-assistant review <repo>  ──►  Gemini Live voice walkthrough  ──►  Q&A (repo tools)  ──►  feedback  ──►  follow-up prompt for coding agent
+optional PPTX deck  ──►  Gemini Live voice walkthrough  ──►  Q&A (repo tools)  ──►  feedback  ──►  follow-up prompt for coding agent
 ```
 
 The **Review Artifact Contract** (`src/assistant_agent/contract.py`) is the linchpin: a
@@ -50,7 +50,9 @@ library (libpulse-native) is a drop-in alternative for `audio.py`.
 uv run assistant list                 # registered repos (repos.toml) + review status
 uv run assistant brief geosim         # resolve/generate a dossier and print it (no voice)
 uv run assistant brief geosim --generate   # force fallback generation from git + transcripts
+uv run assistant deck geosim          # prepare a PowerPoint companion deck
 uv run assistant review geosim        # voice walkthrough (needs API key + audio)
+uv run assistant review geosim --deck # prepare a deck, then use it as the voice agenda
 ```
 
 `<repo>` is a name from `repos.toml` or a path to any git repo.
@@ -67,8 +69,8 @@ uv run assistant brief geosim --generate   # exercises the fallback generator (n
 ## Status (MVP)
 
 Done: contract, collector (git + transcripts matched by `cwd`), fallback generator,
-dossier resolver, voice walkthrough (Gemini Live), conversation tools, feedback capture +
-follow-up handoff, CLI, shared-memory state.
+dossier resolver, PowerPoint companion deck generation, voice walkthrough (Gemini Live),
+conversation tools, feedback capture + follow-up handoff, CLI, shared-memory state.
 
 Next (see `PLAN.md`): native dossier producer (Claude Code `Stop` hook), proactive
 calendar scheduling, auto-apply feedback, multi-repo digest.

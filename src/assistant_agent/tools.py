@@ -16,10 +16,20 @@ from . import feedback
 
 
 class ToolBox:
-    def __init__(self, repo_name: str, repo_path: Path, dossier: Dossier):
+    def __init__(
+        self,
+        repo_name: str,
+        repo_path: Path,
+        dossier: Dossier,
+        *,
+        deck_outline: str | None = None,
+        deck_path: Path | None = None,
+    ):
         self.repo_name = repo_name
         self.repo_path = repo_path
         self.dossier = dossier
+        self.deck_outline = deck_outline
+        self.deck_path = deck_path
         self.feedback_items: list[str] = []
 
     # ---- conversation-serving read tools ----------------------------------
@@ -52,8 +62,16 @@ class ToolBox:
 
     def show_test_results(self) -> str:
         if self.dossier.tests_run:
-            return "Tests recorded in the dossier:\n" + "\n".join(f"- {t}" for t in self.dossier.tests_run)
+            return "Tests recorded in the dossier:\n" + "\n".join(
+                f"- {t}" for t in self.dossier.tests_run
+            )
         return "No test results were recorded in the dossier for this work."
+
+    def read_deck_outline(self) -> str:
+        if not self.deck_outline:
+            return "No PowerPoint deck outline was prepared for this session."
+        location = f"\nDeck file: {self.deck_path}" if self.deck_path else ""
+        return self.deck_outline + location
 
     # ---- feedback / handoff -----------------------------------------------
 
@@ -120,6 +138,10 @@ FUNCTION_DECLARATIONS = [
         },
     },
     {"name": "show_test_results", "description": "Report what tests/checks were run."},
+    {
+        "name": "read_deck_outline",
+        "description": "Return the prepared PowerPoint slide outline and narration cues.",
+    },
     {
         "name": "record_feedback",
         "description": "Record a piece of the engineer's feedback or a requested change.",

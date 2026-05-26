@@ -2,6 +2,7 @@
 
     assistant list                 # registered repos + review status
     assistant brief <repo>         # resolve/generate a dossier and print it (no voice)
+    assistant deck <repo>          # prepare a PowerPoint companion deck
     assistant review <repo>        # voice walkthrough of the repo's recent work
     assistant audio-check          # verify mic/speaker before a voice session
 
@@ -12,8 +13,10 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from . import config, state
+from .deck import write_deck
 from .dossier import resolve_dossier
 
 
@@ -64,13 +67,38 @@ def _cmd_brief(args: argparse.Namespace) -> int:
     return 0
 
 
+def _prepare_deck(repo: config.Repo, dossier) -> tuple[str, Path]:
+    result = write_deck(repo.path, dossier)
+    print(
+        f"Prepared {result.slide_count}-slide PowerPoint deck:\n"
+        f"  {result.pptx_path}\n"
+        f"  latest copy: {result.latest_pptx_path}\n"
+        f"  outline: {result.outline_path}"
+    )
+    return result.outline_path.read_text(encoding="utf-8"), result.pptx_path
+
+
+def _cmd_deck(args: argparse.Namespace) -> int:
+    repo, (dossier, source) = _resolve(args)
+    _print_brief(dossier, source)
+    _prepare_deck(repo, dossier)
+    return 0
+
+
 def _cmd_review(args: argparse.Namespace) -> int:
     repo, (dossier, source) = _resolve(args)
     _print_brief(dossier, source)
+    deck_outline = None
+    deck_path = None
+    if args.deck:
+        deck_outline, deck_path = _prepare_deck(repo, dossier)
+
     from .tools import ToolBox
     from . import voice
 
-    toolbox = ToolBox(repo.name, repo.path, dossier)
+    toolbox = ToolBox(
+        repo.name, repo.path, dossier, deck_outline=deck_outline, deck_path=deck_path
+    )
     voice.review(toolbox)
 
     head = None
@@ -97,9 +125,17 @@ def main(argv: list[str] | None = None) -> int:
     p_brief.add_argument("--generate", action="store_true", help="Force fallback generation.")
     p_brief.set_defaults(func=_cmd_brief)
 
+    p_deck = sub.add_parser("deck", help="Prepare a PowerPoint companion deck.")
+    p_deck.add_argument("repo")
+    p_deck.add_argument("--generate", action="store_true", help="Force fallback generation.")
+    p_deck.set_defaults(func=_cmd_deck)
+
     p_review = sub.add_parser("review", help="Voice walkthrough of a repo's recent work.")
     p_review.add_argument("repo")
     p_review.add_argument("--generate", action="store_true", help="Force fallback generation.")
+    p_review.add_argument(
+        "--deck", action="store_true", help="Prepare a PowerPoint deck before the voice session."
+    )
     p_review.set_defaults(func=_cmd_review)
 
     sub.add_parser("audio-check", help="Verify mic/speaker.").set_defaults(func=_cmd_audio_check)
