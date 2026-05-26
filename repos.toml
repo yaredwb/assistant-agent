@@ -1,0 +1,27 @@
+# Registry of repos the assistant can review.
+# `assistant review <name>` resolves a name here to its path.
+# You can also pass a path directly to `assistant review <path>`.
+
+[repos.geosim]
+path = "~/GeoSim.AI-JS"
+
+[repos.nadag]
+path = "~/nadag_mcp_app"
+
+[repos.ground-model]
+path = "~/automated-ground-model"
+
+[repos.geo-twin]
+path = "~/geo_twin_3D"
+
+[repos.pinns]
+path = "~/pinns-gwflow-geometry"
+
+[repos.renspire]
+path = "~/renspire"
+
+[repos.mcp-geo]
+path = "~/mcp_analytical_geotechnics"
+
+[repos.3d-ground]
+path = "~/3d_ground_model_mcp_app"
