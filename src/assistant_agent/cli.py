@@ -81,9 +81,9 @@ def _cmd_review(args: argparse.Namespace) -> int:
 
 
 def _cmd_audio_check(_: argparse.Namespace) -> int:
-    from scripts.audio_smoketest import main as audio_main  # type: ignore
+    from .audiocheck import run
 
-    return audio_main()
+    return run()
 
 
 def main(argv: list[str] | None = None) -> int:
